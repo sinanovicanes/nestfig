@@ -22,9 +22,6 @@ Here's an example:
 import { IsString } from "class-validator";
 import { Config, Field } from "nestfig";
 
-import { IsPort, IsString } from "class-validator";
-import { Config, Field } from "nestfig";
-
 @Config()
 export class MailerConfig {
   @Field("MAILER_HOST")

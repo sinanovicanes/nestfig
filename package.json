@@ -1,6 +1,6 @@
 {
   "name": "nestfig",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Easily create and manage your NestJS project configurations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,12 +24,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/nestfig"
+    "url": "https://github.com/sinanovicanes/nestfig"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/nestfig/issues"
+    "url": "https://github.com/sinanovicanes/nestfig/issues"
   },
-  "homepage": "https://github.com/yourusername/nestfig#readme",
+  "homepage": "https://github.com/sinanovicanes/nestfig#readme",
   "dependencies": {
     "dotenv": "16.4.5"
   },
