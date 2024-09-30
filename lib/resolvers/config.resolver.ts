@@ -1,8 +1,9 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-import { CONFIG_METADATA_KEY, FIELD_METADATA_KEY, FieldMetadata } from "../decorators";
+import { FieldMetadata } from "../decorators";
 import { ConfigOptions } from "../interfaces";
 import { Config } from "../types";
+import { CONFIG_TOKEN, CONFIG_FIELDS_TOKEN } from "../constants";
 
 export class ConfigResolver {
   private static validateConfig<T extends Function>(config: Config<T>, instance: T) {
@@ -36,23 +37,22 @@ export class ConfigResolver {
   }
 
   static resolve(config: Config) {
-    const options = Reflect.getMetadata(CONFIG_METADATA_KEY, config);
+    const options = Reflect.getMetadata(CONFIG_TOKEN, config);
 
     if (!options) {
       throw new Error(`No configuration options found for ${config.name}`);
     }
 
+    const instance = new config();
     const configData = this.getConfigData(options);
     const fields: Record<string, FieldMetadata> = Reflect.getMetadata(
-      FIELD_METADATA_KEY,
-      config
+      CONFIG_FIELDS_TOKEN,
+      instance
     );
 
     if (!fields) {
       throw new Error(`No fields found for ${config.name}`);
     }
-
-    const instance = new config();
 
     for (const propertyKey in fields) {
       const propertyOptions = fields[propertyKey];
