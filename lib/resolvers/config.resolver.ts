@@ -21,7 +21,7 @@ export class ConfigResolver {
     return validatedConfig;
   }
 
-  private static getConfig(options: ConfigOptions) {
+  private static getConfigData(options: ConfigOptions) {
     const config: Record<string, any> = {};
 
     if (options.paths) {
@@ -36,22 +36,26 @@ export class ConfigResolver {
   }
 
   static resolve(config: Config) {
-    const configOptions = Reflect.getMetadata(CONFIG_METADATA_KEY, config);
+    const options = Reflect.getMetadata(CONFIG_METADATA_KEY, config);
 
-    if (!configOptions) {
+    if (!options) {
       throw new Error(`No configuration options found for ${config.name}`);
     }
 
-    const instance = new config();
-    const configData = this.getConfig(configOptions);
-    const fields = Reflect.getMetadata(FIELD_METADATA_KEY, instance);
+    const configData = this.getConfigData(options);
+    const fields: Record<string, FieldMetadata> = Reflect.getMetadata(
+      FIELD_METADATA_KEY,
+      config
+    );
 
     if (!fields) {
       throw new Error(`No fields found for ${config.name}`);
     }
 
+    const instance = new config();
+
     for (const propertyKey in fields) {
-      const propertyOptions: FieldMetadata = fields[propertyKey];
+      const propertyOptions = fields[propertyKey];
 
       instance[propertyKey] = configData[propertyOptions.field] ?? instance[propertyKey];
     }
