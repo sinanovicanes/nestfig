@@ -1,172 +1,80 @@
 # Nestfig
 
-**Nestfig** is a flexible configuration management library for [NestJS](https://nestjs.com/) that allows you to extract environment variables directly into your class-based configuration providers. With decorators and easy-to-use services, Nestfig keeps your configuration clean, organized, and validated without cluttering your classes with unnecessary logic.
-
-## Features
-
-- **Class-based configuration**: Define configuration using clean, class-based design patterns.
-- **Custom decorators**: Easily bind environment variables to class fields using `@ConfigField`.
-- **Automatic validation**: Integrate `class-validator` to validate configuration values before they are used.
-- **Clean and modular**: No need to clutter your config classes with environment-loading logic.
-- **Reusable loader**: Use a single service to manage environment variables across multiple config classes.
+Nestfig is a configuration management library for NestJS, allowing you to easily extract and manage configuration values from environment variables or JSON files. It provides decorators for marking configuration fields and supports loading multiple configuration sources.
 
 ## Installation
+
+Install the package via npm:
 
 ```bash
 npm install nestfig
 ```
 
-or
-
-```bash
-yarn add nestfig
-```
-
 ## Usage
 
-### 1. Define Your Config Class
+### Defining Configuration Classes
 
-Use the `@ConfigField()` decorator to mark which fields should be populated from environment variables:
+You can define a configuration class by using the `@Config` and `@Field` decorators. The `@Config` decorator specifies the source(s) of the configuration, such as environment variables or JSON files. The `@Field` decorator extracts individual fields from these sources.
+
+Here's an example:
 
 ```typescript
-import { ConfigField } from "nestfig";
+import { IsString } from "class-validator";
+import { Config, Field } from "nestfig";
 
-export class MyDatabaseConfig {
-  @ConfigField("DB_HOST")
+import { IsPort, IsString } from "class-validator";
+import { Config, Field } from "nestfig";
+
+@Config()
+export class MailerConfig {
+  @Field("MAILER_HOST")
+  @IsString()
   host: string;
 
-  @ConfigField("DB_PORT")
-  port: number;
+  @Field("MAILER_PORT")
+  @IsPort()
+  port: string;
+
+  @Field("MAILER_USER")
+  @IsString()
+  user: string;
+
+  @Field("MAILER_PASS")
+  @IsString()
+  password: string;
 }
 ```
 
-### 2. Setup the Config Module
+### Loading Configuration
 
-In your module, set up Nestfig to load your configuration class using the `ConfigLoaderService`. This service handles loading environment variables and validation (optional).
+To load and register the configuration in your NestJS app, you need to use the `NestfigModule` and pass the configuration classes you defined.
+
+Here's how you can load the configuration:
 
 ```typescript
 import { Module } from "@nestjs/common";
-import { MyDatabaseConfig } from "./config/my-database-config";
-import { ConfigLoaderService } from "nestfig";
+import { NestfigModule } from "nestfig";
+import { MailerConfig } from "./mailer-config";
+import { CacheConfig } from "./cache-config";
 
 @Module({
-  providers: [
-    ConfigLoaderService,
-    {
-      provide: MyDatabaseConfig,
-      useFactory: async (configLoader: ConfigLoaderService) => {
-        return await configLoader.loadConfig(MyDatabaseConfig);
-      },
-      inject: [ConfigLoaderService]
-    }
-  ],
-  exports: [MyDatabaseConfig]
+  imports: [
+    NestfigModule.load({
+      global: true, // Makes the configuration available globally
+      envFilePaths: [".env", ".env.development"], // Env file paths to load them to the process.env using dotenv
+      configs: [MailerConfig, CacheConfig] // Register multiple config classes
+    })
+  ]
 })
-export class ConfigModule {}
+export class AppModule {}
 ```
 
-### 3. Inject Your Config Class
+### Features
 
-You can now inject your config class into any service or controller in your NestJS app:
+- **Supports Multiple Config Sources:** You can load multiple JSON configuration files by specifying paths in the `@Config` decorator.
+- **Validation:** Integrates with `class-validator` to validate the configuration values.
+- **Global Configuration:** Easily make configuration available globally across your NestJS app.
 
-```typescript
-import { Injectable } from "@nestjs/common";
-import { MyDatabaseConfig } from "./config/my-database-config";
+### License
 
-@Injectable()
-export class SomeService {
-  constructor(private readonly dbConfig: MyDatabaseConfig) {}
-
-  getDatabaseHost() {
-    return this.dbConfig.host;
-  }
-}
-```
-
-### 4. (Optional) Add Validation
-
-Nestfig integrates seamlessly with `class-validator` to ensure the environment variables meet certain requirements:
-
-```typescript
-import { IsPort } from "class-validator";
-import { ConfigField } from "nestfig";
-
-export class MyDatabaseConfig {
-  @ConfigField("DB_HOST")
-  host: string;
-
-  @ConfigField("DB_PORT")
-  @IsPort()
-  port: number;
-}
-```
-
-The `ConfigLoaderService` will automatically validate the fields before they are injected into your application.
-
-## Example
-
-Here’s a complete example of using **Nestfig** to load and validate configuration in a NestJS app:
-
-```typescript
-// config/my-database-config.ts
-import { IsPort } from "class-validator";
-import { ConfigField } from "nestfig";
-
-export class MyDatabaseConfig {
-  @ConfigField("DB_HOST")
-  host: string;
-
-  @ConfigField("DB_PORT")
-  @IsPort()
-  port: number;
-}
-
-// config/config.module.ts
-import { Module } from "@nestjs/common";
-import { MyDatabaseConfig } from "./my-database-config";
-import { ConfigLoaderService } from "nestfig";
-
-@Module({
-  providers: [
-    ConfigLoaderService,
-    {
-      provide: MyDatabaseConfig,
-      useFactory: async (configLoader: ConfigLoaderService) => {
-        return await configLoader.loadConfig(MyDatabaseConfig);
-      },
-      inject: [ConfigLoaderService]
-    }
-  ],
-  exports: [MyDatabaseConfig]
-})
-export class ConfigModule {}
-
-// some.service.ts
-import { Injectable } from "@nestjs/common";
-import { MyDatabaseConfig } from "./config/my-database-config";
-
-@Injectable()
-export class SomeService {
-  constructor(private readonly dbConfig: MyDatabaseConfig) {}
-
-  getDatabaseHost() {
-    return this.dbConfig.host;
-  }
-}
-```
-
-## API Reference
-
-### `@ConfigField(envVarName: string)`
-
-- **Description**: Marks a class property as being populated from an environment variable.
-- **Parameter**: `envVarName` - The name of the environment variable to load.
-
-### `ConfigLoaderService`
-
-- **Method**: `loadConfig<T>(configClass: new () => T): Promise<T>`
-  - **Description**: Dynamically loads and validates environment variables into the provided config class.
-
-## License
-
-Nestfig is [MIT licensed](LICENSE).
+This project is licensed under the MIT License.
