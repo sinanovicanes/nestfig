@@ -16,7 +16,8 @@ export class ConfigResolver {
     });
 
     const errors = validateSync(validatedConfig, {
-      skipMissingProperties: false
+      skipMissingProperties: false,
+      forbidUnknownValues: false
     });
 
     if (errors.length > 0) {
