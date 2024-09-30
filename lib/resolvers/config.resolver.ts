@@ -3,15 +3,27 @@ import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
 import { existsSync, readFileSync } from "fs";
 import { CONFIG_FIELDS_TOKEN, CONFIG_TOKEN } from "../constants";
-import { FieldMetadata } from "../decorators";
-import { ConfigOptions } from "../interfaces";
-import { Config } from "../types";
+import { ConfigOptions, FieldMetadata } from "../interfaces";
+import { ConfigConstructor } from "../types";
 
 export class ConfigResolver {
-  private static logger = new Logger(ConfigResolver.name);
+  private readonly logger: Logger;
+  private readonly options: ConfigOptions;
+  private readonly name: string;
 
-  private static validateConfig<T extends Function>(config: Config<T>, instance: T) {
-    const validatedConfig = plainToInstance(config, instance, {
+  constructor(private readonly configConstructor: ConfigConstructor) {
+    this.name = configConstructor.name;
+    this.options = Reflect.getMetadata(CONFIG_TOKEN, configConstructor);
+
+    if (!this.options) {
+      throw new Error(`No configuration options found for ${this.name}`);
+    }
+
+    this.logger = new Logger(`ConfigResolver:${this.name}`);
+  }
+
+  private validateConfig<T extends Function>(instance: T) {
+    const validatedConfig = plainToInstance(this.configConstructor, instance, {
       enableImplicitConversion: true
     });
 
@@ -27,7 +39,7 @@ export class ConfigResolver {
     return validatedConfig;
   }
 
-  private static loadConfigFile(path: string): Record<string, any> {
+  private loadConfigFile(path: string): Record<string, any> {
     if (!existsSync(path)) {
       throw new Error(`Config file not found at ${path}`);
     }
@@ -48,48 +60,49 @@ export class ConfigResolver {
     }
   }
 
-  private static getConfigData(options: ConfigOptions) {
+  private getConfig() {
     const config: Record<string, any> = {};
 
-    if (options.paths) {
-      options.paths.forEach(path => {
+    if (this.options.paths) {
+      this.options.paths.forEach(path => {
         const data = this.loadConfigFile(path);
 
         Object.assign(config, data);
       });
     }
 
-    if (!options.ignoreEnv) {
+    if (!this.options.ignoreEnv) {
       Object.assign(config, process.env);
     }
 
     return config;
   }
 
-  static resolve(config: Config) {
-    const options = Reflect.getMetadata(CONFIG_TOKEN, config);
-
-    if (!options) {
-      throw new Error(`No configuration options found for ${config.name}`);
-    }
-
-    const instance = new config();
-    const configData = this.getConfigData(options);
+  private populateInstance(instance: ConfigConstructor) {
+    const config = this.getConfig();
     const fields: Record<string, FieldMetadata> = Reflect.getMetadata(
       CONFIG_FIELDS_TOKEN,
       instance
     );
 
-    if (!fields) {
-      throw new Error(`No fields found for ${config.name}`);
-    }
+    if (!fields) return;
 
     for (const propertyKey in fields) {
       const propertyOptions = fields[propertyKey];
 
-      instance[propertyKey] = configData[propertyOptions.field] ?? instance[propertyKey];
+      instance[propertyKey] = config[propertyOptions.field] ?? instance[propertyKey];
     }
+  }
 
-    return this.validateConfig(config, instance);
+  private createInstance() {
+    return new this.configConstructor();
+  }
+
+  resolve() {
+    const instance = this.createInstance();
+
+    this.populateInstance(instance);
+
+    return this.validateConfig(instance);
   }
 }

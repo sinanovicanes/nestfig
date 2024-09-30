@@ -1,4 +1,4 @@
-import { Config } from "../types";
+import { ConfigConstructor } from "../types";
 
 export interface NestfigModuleOptions {
   global?: boolean;
@@ -8,5 +8,5 @@ export interface NestfigModuleOptions {
    */
   envFilePath?: string | string[];
 
-  configs: Config[];
+  configs: ConfigConstructor[];
 }

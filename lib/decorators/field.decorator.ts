@@ -1,16 +1,11 @@
 import { CONFIG_FIELDS_TOKEN } from "../constants";
-import { FieldOptions } from "../interfaces";
+import { FieldMetadata } from "../interfaces";
 
-export interface FieldMetadata {
-  field: string;
-  options: FieldOptions;
-}
-
-export const Field = (field: string, options: FieldOptions = {}): PropertyDecorator => {
+export const Field = (field: string): PropertyDecorator => {
   return (target: any, propertyKey: string) => {
     const existingFields = Reflect.getMetadata(CONFIG_FIELDS_TOKEN, target) || {};
 
-    existingFields[propertyKey] = { field, options } as FieldMetadata;
+    existingFields[propertyKey] = { field } as FieldMetadata;
 
     Reflect.defineMetadata(CONFIG_FIELDS_TOKEN, existingFields, target);
   };

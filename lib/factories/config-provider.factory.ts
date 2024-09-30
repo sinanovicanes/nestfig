@@ -1,12 +1,12 @@
 import { Provider } from "@nestjs/common";
 import { ConfigResolver } from "../resolvers";
-import { Config } from "../types";
+import { ConfigConstructor } from "../types";
 
 export class ConfigProviderFactory {
-  static create(config: Config): Provider {
+  static create(config: ConfigConstructor): Provider {
     return {
       provide: config,
-      useFactory: () => ConfigResolver.resolve(config)
+      useFactory: () => new ConfigResolver(config).resolve()
     };
   }
 }
