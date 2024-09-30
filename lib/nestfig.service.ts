@@ -1,13 +1,14 @@
 import { Injectable } from "@nestjs/common";
-import { CONFIG_METADATA_KEY, FIELD_METADATA_KEY, FieldMetadata } from "./decorators";
-import { ClassConstructor, plainToInstance } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
+import { CONFIG_METADATA_KEY, FIELD_METADATA_KEY, FieldMetadata } from "./decorators";
 import { ConfigOptions } from "./interfaces";
+import { Config } from "./types";
 
 @Injectable()
 export class NestfigService {
-  private validateConfig<T extends Function>(target: ClassConstructor<T>, instance: T) {
-    const validatedConfig = plainToInstance(target, instance, {
+  private validateConfig<T extends Function>(config: Config<T>, instance: T) {
+    const validatedConfig = plainToInstance(config, instance, {
       enableImplicitConversion: true
     });
 
@@ -36,15 +37,15 @@ export class NestfigService {
     return config;
   }
 
-  load(target: ClassConstructor<any>) {
-    const configOptions = Reflect.getMetadata(CONFIG_METADATA_KEY, target);
+  load(config: Config) {
+    const configOptions = Reflect.getMetadata(CONFIG_METADATA_KEY, config);
 
     if (!configOptions) {
-      throw new Error(`No configuration found for ${target.name}`);
+      throw new Error(`No configuration found for ${config.name}`);
     }
 
-    const instance = new target();
-    const config = this.getConfig(configOptions);
+    const instance = new config();
+    const configData = this.getConfig(configOptions);
 
     for (const propertyKey in instance) {
       const propertyOptions: FieldMetadata = Reflect.getMetadata(
@@ -54,10 +55,11 @@ export class NestfigService {
       );
 
       if (propertyOptions) {
-        instance[propertyKey] = config[propertyOptions.field] ?? instance[propertyKey];
+        instance[propertyKey] =
+          configData[propertyOptions.field] ?? instance[propertyKey];
       }
     }
 
-    return this.validateConfig(target, instance);
+    return this.validateConfig(config, instance);
   }
 }

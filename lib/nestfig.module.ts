@@ -1,27 +1,21 @@
-import { DynamicModule, Module, ModuleMetadata } from "@nestjs/common";
-import { NestfigService } from "./nestfig.service";
+import { DynamicModule, Module } from "@nestjs/common";
 import { ClassConstructor } from "class-transformer";
+import { NestfigModuleOptions } from "./interfaces";
+import { NestfigService } from "./nestfig.service";
+import { ConfigProviderFactory } from "./factories";
 
 @Module({
   providers: [NestfigService]
 })
 export class NestfigModule {
-  private static createProvider(target: ClassConstructor<any>) {
-    return {
-      provide: target,
-      inject: [NestfigService],
-      useFactory: (service: NestfigService) => service.load(target)
-    };
-  }
-
-  static load(...targets: ClassConstructor<any>[]): DynamicModule {
-    const providers = targets.map(this.createProvider);
+  static load({ global, configs }: NestfigModuleOptions): DynamicModule {
+    const configProviders = configs.map(config => ConfigProviderFactory.create(config));
 
     return {
       module: NestfigModule,
-      global: true,
-      providers: [NestfigService, ...providers],
-      exports: providers
+      global,
+      providers: [NestfigService, ...configProviders],
+      exports: configProviders
     };
   }
 }
