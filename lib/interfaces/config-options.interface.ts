@@ -1,6 +1,6 @@
 export interface ConfigOptions {
   /**
-   * If "true", environment files (`.env`) will be ignored.
+   * If "true", process.env will be ignored.
    */
   ignoreEnv?: boolean;
 
