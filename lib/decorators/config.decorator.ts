@@ -1,4 +1,4 @@
-import { ConfigOptions } from "lib/interfaces";
+import { ConfigOptions } from "../interfaces";
 
 export const CONFIG_METADATA_KEY = "nestfig_config";
 

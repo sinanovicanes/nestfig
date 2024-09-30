@@ -1,4 +1,4 @@
-import { Config } from "lib/types";
+import { Config } from "../types";
 
 export interface NestfigModuleOptions {
   global?: boolean;

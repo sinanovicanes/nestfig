@@ -1,13 +1,12 @@
 import { Provider } from "@nestjs/common";
-import { NestfigService } from "lib/nestfig.service";
-import { Config } from "lib/types";
+import { ConfigResolver } from "../resolvers";
+import { Config } from "../types";
 
 export class ConfigProviderFactory {
   static create(config: Config): Provider {
     return {
       provide: config,
-      inject: [NestfigService],
-      useFactory: (service: NestfigService) => service.load(config)
+      useFactory: () => ConfigResolver.resolve(config)
     };
   }
 }
