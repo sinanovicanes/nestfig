@@ -22,6 +22,14 @@
   ],
   "author": "sinanovicanes",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/nestfig"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/nestfig/issues"
+  },
+  "homepage": "https://github.com/yourusername/nestfig#readme",
   "dependencies": {
     "dotenv": "16.4.5"
   },
