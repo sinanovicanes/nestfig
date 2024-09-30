@@ -1,13 +1,11 @@
-import { Injectable } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-import { CONFIG_METADATA_KEY, FIELD_METADATA_KEY, FieldMetadata } from "./decorators";
-import { ConfigOptions } from "./interfaces";
-import { Config } from "./types";
+import { CONFIG_METADATA_KEY, FIELD_METADATA_KEY, FieldMetadata } from "../decorators";
+import { ConfigOptions } from "../interfaces";
+import { Config } from "../types";
 
-@Injectable()
-export class NestfigService {
-  private validateConfig<T extends Function>(config: Config<T>, instance: T) {
+export class ConfigResolver {
+  private static validateConfig<T extends Function>(config: Config<T>, instance: T) {
     const validatedConfig = plainToInstance(config, instance, {
       enableImplicitConversion: true
     });
@@ -23,7 +21,7 @@ export class NestfigService {
     return validatedConfig;
   }
 
-  private async getConfig(options: ConfigOptions) {
+  private static getConfig(options: ConfigOptions) {
     const config: Record<string, any> = {};
 
     if (options.paths) {
@@ -37,27 +35,25 @@ export class NestfigService {
     return config;
   }
 
-  load(config: Config) {
+  static resolve(config: Config) {
     const configOptions = Reflect.getMetadata(CONFIG_METADATA_KEY, config);
 
     if (!configOptions) {
-      throw new Error(`No configuration found for ${config.name}`);
+      throw new Error(`No configuration options found for ${config.name}`);
     }
 
     const instance = new config();
     const configData = this.getConfig(configOptions);
+    const fields = Reflect.getMetadata(FIELD_METADATA_KEY, instance);
 
-    for (const propertyKey in instance) {
-      const propertyOptions: FieldMetadata = Reflect.getMetadata(
-        FIELD_METADATA_KEY,
-        instance,
-        propertyKey
-      );
+    if (!fields) {
+      throw new Error(`No fields found for ${config.name}`);
+    }
 
-      if (propertyOptions) {
-        instance[propertyKey] =
-          configData[propertyOptions.field] ?? instance[propertyKey];
-      }
+    for (const propertyKey in fields) {
+      const propertyOptions: FieldMetadata = fields[propertyKey];
+
+      instance[propertyKey] = configData[propertyOptions.field] ?? instance[propertyKey];
     }
 
     return this.validateConfig(config, instance);
