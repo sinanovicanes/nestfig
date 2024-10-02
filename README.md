@@ -62,7 +62,7 @@ import { CacheConfig } from "./cache-config";
 
 @Module({
   imports: [
-    NestfigModule.load({
+    NestfigModule.forRoot({
       global: true, // Makes the configuration available globally
       envFilePaths: [".env", ".env.development"], // Env file paths to load them to the process.env using dotenv
       configs: [MailerConfig, CacheConfig] // Register multiple config classes
