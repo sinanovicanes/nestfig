@@ -10,6 +10,12 @@ Install the package via npm:
 npm install nestfig
 ```
 
+## Features
+
+- **Supports Multiple Config Sources:** You can load multiple JSON or YAML configuration files by specifying paths in the `@Config` decorator.
+- **Validation:** Integrates with `class-validator` to validate the configuration values.
+- **Global Configuration:** Easily make configuration available globally across your NestJS app.
+
 ## Usage
 
 ### Defining Configuration Classes
@@ -65,12 +71,6 @@ import { CacheConfig } from "./cache-config";
 })
 export class AppModule {}
 ```
-
-### Features
-
-- **Supports Multiple Config Sources:** You can load multiple JSON or YAML configuration files by specifying paths in the `@Config` decorator.
-- **Validation:** Integrates with `class-validator` to validate the configuration values.
-- **Global Configuration:** Easily make configuration available globally across your NestJS app.
 
 ### License
 
