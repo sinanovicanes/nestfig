@@ -1,6 +1,6 @@
 # Nestfig
 
-Nestfig is a configuration management library for NestJS, allowing you to easily extract and manage configuration values from environment variables or JSON files. It provides decorators for marking configuration fields and supports loading multiple configuration sources.
+Nestfig is a configuration management library for NestJS, allowing you to easily extract and manage configuration values from environment variables, JSON or YAML files. It provides decorators for marking configuration fields and supports loading multiple configuration sources.
 
 ## Installation
 
@@ -14,7 +14,7 @@ npm install nestfig
 
 ### Defining Configuration Classes
 
-You can define a configuration class by using the `@Config` and `@Field` decorators. The `@Config` decorator specifies the source(s) of the configuration, such as environment variables or JSON files. The `@Field` decorator extracts individual fields from these sources.
+You can define a configuration class by using the `@Config` and `@Field` decorators. The `@Config` decorator specifies the source(s) of the configuration, such as environment variables, JSON or YAML files. The `@Field` decorator extracts individual fields from these sources.
 
 Here's an example:
 
@@ -68,7 +68,7 @@ export class AppModule {}
 
 ### Features
 
-- **Supports Multiple Config Sources:** You can load multiple JSON configuration files by specifying paths in the `@Config` decorator.
+- **Supports Multiple Config Sources:** You can load multiple JSON or YAML configuration files by specifying paths in the `@Config` decorator.
 - **Validation:** Integrates with `class-validator` to validate the configuration values.
 - **Global Configuration:** Easily make configuration available globally across your NestJS app.
 

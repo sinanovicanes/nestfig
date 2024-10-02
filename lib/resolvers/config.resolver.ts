@@ -1,13 +1,13 @@
-import { Logger } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-import { existsSync, readFileSync } from "fs";
+import { existsSync } from "fs";
+import { extname } from "path";
 import { CONFIG_FIELDS_TOKEN, CONFIG_TOKEN } from "../constants";
 import { ConfigOptions, FieldMetadata } from "../interfaces";
+import { JsonParser, YamlParser } from "../parsers";
 import { ConfigConstructor } from "../types";
 
 export class ConfigResolver {
-  private readonly logger: Logger;
   private readonly options: ConfigOptions;
   private readonly name: string;
 
@@ -18,8 +18,6 @@ export class ConfigResolver {
     if (!this.options) {
       throw new Error(`No configuration options found for ${this.name}`);
     }
-
-    this.logger = new Logger(`ConfigResolver:${this.name}`);
   }
 
   private validateConfig<T extends Function>(instance: T) {
@@ -41,22 +39,19 @@ export class ConfigResolver {
 
   private loadConfigFile(path: string): Record<string, any> {
     if (!existsSync(path)) {
-      throw new Error(`Config file not found at ${path}`);
+      throw new Error(`Config file not found: ${path}`);
     }
 
-    const pathExt = path.split(".").pop().toLowerCase();
+    const pathExt = extname(path).slice(1).toLowerCase();
 
     switch (pathExt) {
       case "json":
-        try {
-          return JSON.parse(readFileSync(path, "utf-8"));
-        } catch (e) {
-          throw new Error(`Failed to parse JSON config file at ${path}: ${e}`);
-        }
-      // TODO: Add support for other file types like yaml, toml, etc.
+        return JsonParser.parseFile(path);
+      case "yaml":
+      case "yml":
+        return YamlParser.parseFile(path);
       default:
-        this.logger.warn(`Unsupported file extension ${pathExt}`);
-        break;
+        throw new Error(`Unsupported file extension ${pathExt}`);
     }
   }
 
