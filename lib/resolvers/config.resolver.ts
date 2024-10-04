@@ -3,9 +3,10 @@ import { validateSync } from "class-validator";
 import { existsSync } from "fs";
 import { extname } from "path";
 import { CONFIG_FIELDS_TOKEN, CONFIG_TOKEN } from "../constants";
-import { ConfigOptions, FieldMetadata } from "../interfaces";
+import { ConfigOptions } from "../interfaces";
+import { NestfigRegistery } from "../nestfig.registery";
 import { JsonParser, YamlParser } from "../parsers";
-import { ConfigConstructor } from "../types";
+import { ConfigConstructor, ConfigField } from "../types";
 
 export class ConfigResolver {
   private readonly options: ConfigOptions;
@@ -75,7 +76,7 @@ export class ConfigResolver {
 
   private populateInstance(instance: ConfigConstructor) {
     const config = this.getConfig();
-    const fields: Record<string, FieldMetadata> = Reflect.getMetadata(
+    const fields: Record<string, ConfigField> = Reflect.getMetadata(
       CONFIG_FIELDS_TOKEN,
       instance
     );
@@ -83,9 +84,13 @@ export class ConfigResolver {
     if (!fields) return;
 
     for (const propertyKey in fields) {
-      const propertyOptions = fields[propertyKey];
+      const field = fields[propertyKey];
 
-      instance[propertyKey] = config[propertyOptions.field] ?? instance[propertyKey];
+      if (typeof field === "string") {
+        instance[propertyKey] = config[field] ?? instance[propertyKey];
+      } else if (field instanceof Function) {
+        instance[propertyKey] = NestfigRegistery.get(field());
+      }
     }
   }
 
